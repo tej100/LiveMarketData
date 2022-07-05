@@ -1,2 +1,18 @@
-# current_stock_data
-Program that scrapes real-time market data straight from yahoo-finance for various assets and parses accordingly. Data is structured and organized for analysis, algo-trading, and has many uses
+## Live Market Data
+Class that scalps web content from yahoo finance to scrape real-time information on market price, change, volume, etc. Organized and structured in data frame and CSV file. Updates based on user-input time-interval and can be fed into other libraries to generate technical indicators and ML models or analyze patterns with ease. Works with US Equities, Crpyto Currencies, and Futures
+### Important notes
+- Input ticker-symbol must be same as appears on yahoo finance
+- Time-Interval for streaming data is in minutes and streaming is recommended for shorter time intervals (intraday, or at most, 1440 minutes which is 1 day)
+- Class is not accurate on anything shorter than 5-min chart since yahoo finance does not update quick enough for M1 chart
+- Python script will run indefinitely while streaming until user turns it off
+### How to use
+Open a new file and at the top of the file, type:
+`from LiveMarketData import *` 
+Then, create a class object with the two required parameters, ticker symbol and asset_type; for example: 
+`aapl = CurrentMarket("AAPL", "STOCK")` 
+From here, you can do a couple of things: 
+`aapl.Price` will give you the current price of the object 
+By the same token, `aapl.Volume`, `aapl.PreviousClose`, etc. output similar information. 
+The stream method will allow you to get a livestream of selected data based on the input time interval and selected parameters: 
+`aapl.stream(interval=15, show_volume=True)` will display the price (default True) and volume like an M15 chart. 
+`aapl.stream(interval=10, market_hours=True)` will display the price every 10 minutes only during US market hours (9:30 - 4:00)
