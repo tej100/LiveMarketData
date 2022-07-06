@@ -165,8 +165,8 @@ class CurrentMarket:
 
         return one_year_target
 
-    def Stream(self, interval, market_hours=False, show_price=True, show_change=False,
-               show_volume=False, show_previous_close=False, show_one_year_target=False):
+    def Stream(self, interval, *, market_hours=False, show_price=True, show_change=False,
+               show_volume=False, show_previous_close=False, show_one_year_target=False, path='LiveDataCSV/'):
         """
         Prints real time data on an N-minute chart and stores in a csv file for asset
         Set show_one_year_target to false if checking crpytos or futures
@@ -193,7 +193,6 @@ class CurrentMarket:
             current_data['OneYearTarget'] = pd.Series(dtype='float')
 
         # Set up initial CSV file path to append all data
-        path = "LiveDataCSV/"
         path += self.ticker + '_stock_data.csv'
         current_data.to_csv(path, mode='a', header=True)
 
