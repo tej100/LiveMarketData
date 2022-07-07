@@ -28,13 +28,13 @@ class CurrentMarket:
         :param str ticker: ticker symbol of input asset
         :param str asset_type: type of asset, accepts "STOCK", "CRPYTO", "FUTURE"
         """
-        self.ticker = ticker
+        self.ticker = ticker.upper()
         self.asset_type = asset_type
         self.Error = 0
-        url = "https://finance.yahoo.com/quote/" + self.ticker + "?p=" + self.ticker + "&.tsrc=fin-srch"
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'}
-        r = requests.get(url, headers=headers)
-        self.web_content = BeautifulSoup(r.text, 'lxml')
+        self.headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'}
+        self.url_summary = "https://finance.yahoo.com/quote/" + self.ticker + "?p=" + self.ticker + "&.tsrc=fin-srch"
+        self.web_content = BeautifulSoup(requests.get(self.url_summary, headers=self.headers).text, 'lxml')
+        self.url_chart = f'https://query1.finance.yahoo.com/v8/finance/chart/{self.ticker}?symbol={self.ticker}'
 
     def Price(self):
         """
@@ -80,6 +80,33 @@ class CurrentMarket:
             print('Connection Error')
 
         return change
+
+    def OHLC(self, interval) -> pd.DataFrame:
+        """
+        Outputs current OHLC data
+        :param str interval: Ex: '15m', the time-period candlestick do you want OHLC data from
+        """
+        params = {
+            'range': interval,
+            'interval': interval,
+            'includePrePost': 'true',
+            'events': 'div|split|earn'
+        }
+        OHLC_content = requests.get(self.url_chart, params=params, headers=self.headers).json()
+
+        df = pd.DataFrame(data=[],
+                          columns=['Open', 'High', 'Low', 'Close'],
+                          index=pd.to_datetime([]))
+        df['Datetime'] = pd.to_datetime(OHLC_content['chart']['result'][0]['timestamp'], unit='s')
+        df.set_index('Datetime', inplace=True)
+        df.index.name = None
+
+        df['Open'] = OHLC_content['chart']['result'][0]['indicators']['quote'][0]['open']
+        df['High'] = OHLC_content['chart']['result'][0]['indicators']['quote'][0]['high']
+        df['Low'] = OHLC_content['chart']['result'][0]['indicators']['quote'][0]['low']
+        df['Close'] = OHLC_content['chart']['result'][0]['indicators']['quote'][0]['close']
+        df = round(df, 2)
+        return df[-2:-1]
 
     def Volume(self):
         """
@@ -165,24 +192,31 @@ class CurrentMarket:
 
         return one_year_target
 
-    def Stream(self, interval, *, market_hours=False, show_price=True, show_change=False,
-               show_volume=False, show_previous_close=False, show_one_year_target=False):
+    def Stream(self, interval, *, market_hours=False, show_price=True, show_OHLC=False, show_change=False,
+               show_volume=False, show_previous_close=False, show_one_year_target=False, folder=''):
         """
         Prints real time data on an N-minute chart and stores in a csv file for asset
         Set show_one_year_target to false if checking crpytos or futures
         :param int interval: Indicate time interval (in minutes) for which you want the data to stream
         :param bool market_hours: Default False, indicate True if you would like to stream only during market hours
         :param bool show_price: Default True, indicate False if you do not want market price
+        :param bool show_OHLC: Indicate True to generate Open, High, Low, Close data for the previous period
         :param bool show_change: Indicate True if you want to get the current change
         :param bool show_volume: Indicate True if you want to get the trading volume
         :param bool show_previous_close: Indicate True if you want to get the previous close
         :param bool show_one_year_target: Indicate True if you want to show the one-year target estimate
+        :param str folder: Indicate specific path to store Stream CSV data (by default stores in same folder as LiveMarketData.py)
         (Not fully supported for Cryptos and Futures)
         """
         # Initialize dataframe to store market data
         current_data = pd.DataFrame(data=[], columns=[], index=pd.to_datetime([]))
         if show_price:
             current_data['Price'] = pd.Series(dtype='float')
+        if show_OHLC:
+            current_data['Open'] = pd.Series(dtype='float')
+            current_data['High'] = pd.Series(dtype='float')
+            current_data['Low'] = pd.Series(dtype='float')
+            current_data['Close'] = pd.Series(dtype='float')
         if show_change:
             current_data['Change'] = pd.Series(dtype='float')
         if show_volume:
@@ -193,8 +227,8 @@ class CurrentMarket:
             current_data['OneYearTarget'] = pd.Series(dtype='float')
 
         # Set up initial CSV file path to append all data
-        
-        path = self.ticker + '_stock_data.csv'
+
+        path = folder + self.ticker + '_stock_data.csv'
         current_data.to_csv(path, mode='a', header=True)
 
         # Initialize hours of operation for stream
@@ -215,6 +249,11 @@ class CurrentMarket:
                 data_now = pd.Series([], [], dtype='float64')
                 if show_price:
                     data_now['Price'] = self.Price()
+                if show_OHLC:
+                    data_now['Open'] = self.OHLC(str(interval)+'m')['Open']
+                    data_now['High'] = self.OHLC(str(interval)+'m')['High']
+                    data_now['Low'] = self.OHLC(str(interval)+'m')['Low']
+                    data_now['Close'] = self.OHLC(str(interval)+'m')['Close']
                 if show_change:
                     data_now['Change'] = self.Change()
                 if show_volume:
