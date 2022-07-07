@@ -13,7 +13,8 @@ print(
   f"\nchange: {aapl_live.Change()}"
   f"\nvolume: {aapl_live.Volume()}"
   f"\nprevious close: {aapl_live.PreviousClose()}"
-  f"\none-year target: {aapl_live.OneYearTarget()}"
+  f"\none-year target: {aapl_live.OneYearTarget()}\n",
+  aapl_live.OHLC(interval='1h')
 )
 
 print(
@@ -22,7 +23,8 @@ print(
   f"\nchange: {ethusd_live.Change()}"
   f"\nvolume: {ethusd_live.Volume()}"
   f"\nprevious close: {ethusd_live.PreviousClose()}"
-  f"\none-year target: {ethusd_live.OneYearTarget()}"  # Cryptos do not have one-year targets
+  f"\none-year target: {ethusd_live.OneYearTarget()}\n",  # Cryptos do not have one-year targets
+  ethusd_live.OHLC(interval='15m')
 )
 
 # Start streaming data for objects
