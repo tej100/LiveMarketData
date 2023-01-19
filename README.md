@@ -24,5 +24,5 @@ Class that scalps web content from yahoo finance to scrape real-time information
 - By the same token, `aapl.Volume()`, `aapl.PreviousClose()`, etc. output similar information.
 - `aapl.OHLC(interval='15m')` will return a dataframe with the Open, High, Low, and Close for the previous 15 min candlestick
 - The stream method will allow you to get a livestream of selected data based on the input time interval and selected parameters: 
-- `aapl.stream(interval=15, show_volume=True)` will display the price (default True) and volume like an M15 chart. 
-- `aapl.stream(interval=10, market_hours=True)` will display the price every 10 minutes only during US market hours (9:30 - 4:00)
+- `aapl.Stream(interval=15, show_volume=True)` will display the price (default True) and volume like an M15 chart. 
+- `aapl.Stream(interval=10, market_hours=True)` will display the price every 10 minutes only during US market hours (9:30 - 4:00)
